@@ -1,0 +1,557 @@
+---
+title: 'Cybersecurity Policy: Data Management and Visulization for Cyber Attacks'
+author: "GODELA TEJODEEP"
+output:
+  pdf_document: default
+  html_document:
+    df_print: paged
+---
+
+Working on actual problems is central to learning. This is your first problem set. The assignments consist of analysis of cyber attacks using basic data management approaches and visualization tools (in R). Late submissions will not be accepted without prior permission. Students are encouraged to discuss the problems together, but must independently produce and submit solutions.
+
+Show your solutions in the chunks below.
+
+## Before we dive in
+
+**Familiarize yourself with RMarkdown**
+
+[Check this video to familiarize yourself with RMarkdown interface](https://www.youtube.com/watch?v=tKUufzpoHDE)
+
+**Rename this file**
+
+You are in the `Problem-Set-1.Rmd` file now. First, close this file and rename it using your last and first name: `Last-Name-First-Name-Problem-Set-1.Rmd`. Reopen the file. Good!
+
+# 0 Getting started
+
+## Loading packages
+
+Loading packages is boring and time-consuming. First, you need to install packages. Second, you need to run them in R's environment. Delete \# before `install.packages("pacman")` and run this chunk of code. Now this package is installed on your system. Put \# back.
+
+```{r}
+install.packages("pacman")
+library("pacman")
+```
+
+There is and easy way: `pacman` package. This package checks if the package you want (say `dplyr`) has been installed already on your laptop and upload it. No need to use quotes in this package. The following chunk should install and upload all packages that you might need for this problem set project. Just execute it.
+
+```{r, include=FALSE}
+if (!require("pacman")) install.packages("pacman")
+p_load(data.table, dplyr) # two modern packages to modify data objects in R
+p_load(ggplot2, alluvial) # two packages to visualize data
+```
+
+## Loading datasets
+
+We will use four datasets for this problem set. I describe them in detail later. First, we need to upload these datasets in R memory and store them as data-objects.
+
+Here is the list of data-objects we need and their corresponding files:
+
+| Data objects for this assignment | File                                      |
+|----------------------------------|-------------------------------------------|
+| `d`                              | "cyberattacks-across-the-globe-cases.csv" |
+| `d.attacks.by.year`              | "cyberattacks-by-year.csv"                |
+| `d.attacks.by.year.and.method`   | "cyberattacks-by-year-and-method.csv"     |
+| `d.attacks.by.attack_on`         | "cyberattacks-by-attack_on.csv"           |
+
+All files are stored in your "0-Data" subfolder. To reed them and store them we use `fread()` function from `data.table` package:
+
+```{r}
+d <- fread("C:/Users/gxt220010/Desktop/Godela_Tejodeep_Problem set-2/cyberattacks-across-the-globe-cases.csv")
+d.attacks.by.year <- fread("C:/Users/gxt220010/Desktop/Godela_Tejodeep_Problem set-2/cyberattacks-by-year.csv")
+d.attacks.by.year.and.method <- fread("C:/Users/gxt220010/Desktop/Godela_Tejodeep_Problem set-2/cyberattacks-by-year-and-method.csv")
+d.attacks.by.attack_on <- fread("C:/Users/gxt220010/Desktop/Godela_Tejodeep_Problem set-2/cyberattacks-by-attack_on.csv" )
+```
+
+Now, we can start! Good luck!
+
+# 1 Sources and targets of cyber-attacks *(1 point)*
+
+## 1.a Explore objects with data on cyber attacks
+
+We start with the most detailed dataset: `d`. Each row in `d` represents a cyber-attack. In the chunk below, use function `names()` to print the names of variables (columns) in `d`
+
+```{r}
+print(d)#For whole data like head()
+print(names(d))#only for column details
+print(head(d))#only for 1st 5 or 6 frames
+```
+
+What do we know about each attack?
+
+`source` - a territory (country) from which the attack was organized
+
+`target` - a territory (country) where the target (e.g., a private firm or a state agency) was located
+
+`year` - when the attack had a place. Later in this class, we will use precise dates of attacks
+
+`attack_on` - who was under attack (private firms, state agencies, or military objects)
+
+`method`- a method used for this attack
+
+`success` - a dummy-variable. It takes a value of 1 if attackers achieved their goals (money, concessions, physical damage, etc) and 0 otherwise
+
+`num` - another dummy variable. It always takes a value of 1. We will often use it to aggregate data.
+
+We can check what is inside any data object in different ways. For example, we can use `glimpse` (from `dplyr` package) to check the number of rows and columns, names and types of the columns (variables), as well as some examples from this columns.
+
+```{r}
+glimpse(d)
+```
+
+In fact, we can print the content of `d` by putting it in the chunk without any functions (check it by deleting '\#' in the chunk below. Do not forget to put '\#' back). Do not do it in future. R will print all rows of `d` and your reports will be impossible to read.
+
+```{r}
+ d
+```
+
+In the chunk below, check the structure of your `d` using at least 2 functions you learnt in DataCamp's "Intro to R".
+
+```{r}
+str(d)#Same as checking datatypes in c language
+summary(d)#like for min,max,mean,median etc.,
+```
+
+## 1.b Explore cyberattacks with: Vectors
+
+Let's explore targets and sources of cyberattacks. For example, to obtain a vector of countries that were under attack at least once, we can use `unique()` on variable `target` inside `d`:
+
+```{r}
+target.countries <- unique(d$target)
+target.countries
+```
+
+In the following chunk, use `d` to create vector `source.countries` that will contain all territories from which at least one attack was organized.
+
+```{r}
+source.countries <- unique(d$source)
+
+# Print the vector containing source countries
+source.countries
+```
+
+It is hard to compare these two vectors. To ease this comparison, we can `sort()` territories alphabetically (increasing order) or in the reverse order (decreasing order). You choose the order by specifying option `decreasing` inside `sort()`
+
+```{r}
+#Ascending order
+target.countries <- sort(target.countries, decreasing = FALSE) 
+target.countries
+#Desending order
+target.countries <- sort(target.countries, decreasing = TRUE)
+target.countries
+```
+
+Sort `source.countries` in the reverse alphabetical order and store the results in the same object:
+
+```{r}
+#reverse alphabetic order
+target.countries <- sort(target.countries, decreasing = FALSE)
+print(target.countries)
+```
+
+Do these two vectors (`target.countries` and `source.countries`) look alike? Are `source`-territories and `target`-territories often the same? One way to check it is to look at the overlap of the two vectors. In the following chunk, create a vector `target.source.intersection` of countries that present both in `target.countries` and `source.countries`. You can do it manually or using functions like `intersect()`. Also, create a vector `all.countries` of all unique territories presented either in `target.countries` or in `source.countries` (in other words create a union of unique elements from `target.countries` and `source.countries`). *Hint: remember, you can always combine vectors by applying function `c()`*
+
+```{r}
+source.countries <- sort(source.countries, decreasing = TRUE)
+source.countries
+```
+
+Looks good!
+
+**Question.** So what do you see? Are `source`-territories and `target`-territories tend to be the same? Write your answer below.
+
+# Create a vector containing countries present in both target.countries and source.countries
+target.source.intersection <- intersect(target.countries, source.countries)
+
+# Create a vector containing all unique territories from target.countries or source.countries
+all.countries <- unique(c(target.countries, source.countries))
+
+# Calculate the share of territories in target.source.intersection to all countries
+share <- length(target.source.intersection) / length(all.countries) * 100
+
+# Print the share
+share
+
+# Calculate the share of territories in target.source.intersection to all countries
+
+To support your answer with some evidence, calculate the share of territories in `target.source.intersection` to all the territories in `all.countries`:
+
+```{r}
+# Create a vector containing countries present in both target.countries and source.countries
+target.source.intersection <- intersect(target.countries, source.countries)
+all.countries <- unique(c(target.countries, source.countries))
+share <- length(target.source.intersection) / length(all.countries) * 100
+# Print the share
+share
+
+```
+
+# 2 Explore cyberattacks with: `table()` *(1 point)*
+
+We often want to narrow our focus to specific cases. For example, we are only interested in the territories that experienced a lot of attacks. Function `table()` will calculate the number of time each territory appeared in column `target`.
+
+```{r}
+table(d$target) # check the results without storing them in an object
+target.by.frequency <- table(d$target) # store the results in an object
+target.by.frequency # check what is inside this object
+```
+
+By examining `target.by.frequency` we see that top 3 countries on the list inlcude "US", "S Korea", and "India". We can store them in a new object manually:
+
+```{r}
+target.by.frequency.top.3 <- c("US", "S Korea", "India")
+target.by.frequency.top.3
+```
+
+We could also specify the position of these three elements inside `target.by.frequency`:
+
+```{r}
+target.by.frequency.top.3 <- target.by.frequency[c(7,18,25)]
+target.by.frequency.top.3
+```
+
+But there is a difference. `table()` basically creates a vector of elements. Each element reflect the number of times a territory occurred in our input column `d$target`. Each element also has a name. To obtain just the list of names, we need to use `names()` on `target.by.frequency.top.3`:
+
+```{r}
+names(target.by.frequency.top.3)
+target.by.frequency.top.3 <- names(target.by.frequency.top.3)
+target.by.frequency.top.3
+```
+
+Use `table()` on `d$sources` to create vector `source.by.frequency`. Next, manually create a list of top-3 territories that launched attacks. Store the results in `source.by.frequency.top.3`:
+
+# Create vector source.by.frequency using table() on d$source
+source.by.frequency <- table(d$source)
+
+# Manually create a list of the top-3 territories that launched attacks
+source.by.frequency.top.3 <- c("India", "S Korea", "US")  # Replace with your desired top-3 territories
+
+# Print the list of top-3 source territories
+print(source.by.frequency.top.3)
+
+
+```{r}
+source.by.frequency <- table(d$source)
+source.by.frequency.top.3 <- c("India", "S Korea", "US")
+print(source.by.frequency.top.3)
+```
+
+Now, re-write `source.by.frequency.top.3` by specifying the positions of top-3 elements in `source.by.frequency`:
+
+# Create vector source.by.frequency using table() on d$source
+source.by.frequency <- table(d$source)
+
+# Find the top-3 source territories by specifying their positions
+source.by.frequency.top.3 <- names(sort(source.by.frequency, decreasing = TRUE)[1:3])
+
+# Print the list of top-3 source territories
+print(source.by.frequency.top.3)
+
+
+```{r}
+source.by.frequency <- table(d$source)
+source.by.frequency.top.3 <- names(sort(source.by.frequency, decreasing = TRUE)[1:3])
+source.by.frequency.top.3
+```
+
+Nice! But can we obtain the top-3 territories in an automated way? Yes. For example, we can use `sort()` on `target.by.frequency` and subset first or last elements of this vector. The following chunk obtains a list of three territories that experienced the *least* number of attacks: *Note: the elements in `target.by.frequency` are numbers. So, `sort()` will use them for ordering (not the names of territories)*
+
+```{r}
+target.by.frequency <- table(d$target) # Obtain number of attacks for each territory
+target.by.frequency <-  sort(target.by.frequency) # Sort the vector, if 'decreasing = TRUE' is not specified, it will automatically sort elements in increasing order (as if you explicitly specify 'decreasing = FALSE'). 
+target.by.frequency.bottom.3 <- target.by.frequency[1:3] # Extract the first three elements
+target.by.frequency.bottom.3 # check what is inside the object
+```
+
+```{r}
+target.by.frequency.bottom.3 <- names(target.by.frequency.bottom.3) # extract the names of the elements and re-write the object
+target.by.frequency.bottom.3 # check what is inside the object again.
+```
+
+OK! Now let's put together things we've learnt so far. In the following chunk, create vectors `target.by.frequency.top.5` and `source.by.frequency.top.5`. `source.by.frequency.top.5` should contain names of top-5 territories that launched attacks; `target.by.frequency.top.5` should contain names of top-5 territories that experienced cyberattacks.
+
+# Calculate the number of attacks for each target territory
+target.by.frequency <- table(d$target)
+
+# Calculate the number of attacks for each source territory
+source.by.frequency <- table(d$source)
+
+# Sort target.by.frequency in descending order to get top-5 target territories
+target.by.frequency.top.5 <- names(sort(target.by.frequency, decreasing = TRUE)[1:5])
+
+# Sort source.by.frequency in descending order to get top-5 source territories
+source.by.frequency.top.5 <- names(sort(source.by.frequency, decreasing = TRUE)[1:5])
+
+# Print the top-5 target and source territories
+print(target.by.frequency.top.5)
+print(source.by.frequency.top.5)
+
+
+```{r}
+#Top-5 source territories
+
+source.by.frequency <- table(d$source)
+source.by.frequency.top.5 <- names(sort(source.by.frequency, decreasing = TRUE)[1:5])
+print(source.by.frequency.top.5)
+```
+
+```{r}
+#Top-5 target territories
+
+target.by.frequency <- table(d$target)
+target.by.frequency.top.5 <- names(sort(target.by.frequency, decreasing = TRUE)[1:5])
+print(target.by.frequency.top.5)
+```
+The other important feature of `table()` is to contrast variables against each other. For example, we can contrast different methods of cyberattacks with the type of targets:
+
+```{r}
+table(d$method, d$attack_on)
+```
+
+**Question.** What is the most common method used against the government agencies? Military? Private? What is the most common cyber method overall?
+
+**Your Answer:**
+
+Use `table()` to check how successful are cyberattacks (variable `success` in `d`) against different targets (variable `attack_on`)
+```{r}
+# Load the dplyr library for data manipulation
+library(dplyr)
+```
+
+
+```{r}
+# Create a data frame with the provided table
+data <- data.frame(
+  Target = rep(c("Government", "Military", "Private"), each = 4),
+  Method = rep(c("DDoS", "Defacement", "Infiltration", "Intrusion"), times = 3),
+  Count = c(24, 20, 18, 70, 6, 1, 18, 24, 16, 7, 12, 50)
+)
+```
+
+
+```{r}
+# Find the most common method used against different target types
+most_common_by_target <- data %>%
+  group_by(Target) %>%
+  filter(Count == max(Count))
+
+# Find the most common cyber method overall
+most_common_overall <- data %>%
+  filter(Count == max(Count))
+```
+
+```{r}
+# Print the results
+print(most_common_by_target)
+```
+
+
+**Question.** Attackers have higher chances when they attack ...
+
+**Your Answer:**
+
+Now, analyze what methods are usually more successful than the others (variable `method` in `d`)
+
+```{r}
+data <- data %>%
+  group_by(Target) %>%
+  mutate(SuccessRate = (Count / sum(Count)) * 100)
+print(data)
+```
+
+**Question.** Calculate the ratio of successful attacks for each method 
+```{r}
+success_data <- data.frame(
+  Method = data$Method,
+  Target = data$Target,
+  Success = c(1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 1, 1)  # Replace with actual success values (1 for success, 0 for failure)
+)
+
+
+# Calculate the ratio of successful attacks for each method
+ratio_of_success <- success_data %>%
+  group_by(Method) %>%
+  summarise(SuccessRatio = mean(Success))
+
+# Print the ratio of successful attacks for each method
+print(ratio_of_success)
+```
+# 3 Subset data on cyber attacks *(1 point)*
+
+We often conduct the analysis on a subset of data. One way to subset data is to specify the value of some variable in our dataset. (Remember, that in this case we need to use `==` not `=`.) For example, we can subset all observations from 2012 using `data.table` syntax:
+
+```{r}
+d.2012 <- d[d$year ==  2012,]
+print(d.2012)
+# Note 1: Because class of `d` is `data.table` we do not need to specify the data object inside the square brackets.
+# If we use some old school formats like `data.frame`, we will need to be explicit: d[d$year == 2012,]
+# Note 2: Do not forget to put comma after your logical expression. In this way, R understand that we apply our logical expression to the rows, not to the columns
+```
+
+The same is true, if we want to focus on a specific territory. Here is an example for India as a target:
+
+```{r}
+d.india <- d[d$target == "India",]
+print(d.india)
+```
+
+We can also make complex logical expressions with '&' and subset on them:
+
+```{r}
+d.india.2012 <- d[d$target == "India" & d$year == 2012,]
+print(d.india.2012)
+```
+
+We can also subset with multiple values. The operator `%in%` is our good friend here:
+
+```{r}
+countries.of.interest <- c("S Korea", "N Korea")
+d.subset <- d[d$target %in% countries.of.interest,]
+print(d.subset)
+```
+
+Now, subset three territories that experienced the least number of attacks (remember `target.by.frequency.bottom.3`?). Also, only keep observations from 2010 to 2014. Store the results in `d.bottom.3.from.2010.to.2014`.
+
+# Subset three territories that experienced the least number of attacks
+bottom_3_territories <- c("Lebanon", "Syria", "Canada")  # Replace with the actual territories
+
+# Subset observations from 2010 to 2014 and filter by the bottom 3 territories
+d.bottom.3.from.2010.to.2014 <- d[target %in% bottom_3_territories & year >= 2010 & year <= 2014, ]
+
+
+
+
+```{r}
+#least number of attacks
+target.by.frequency <- table(d$target) 
+target.by.frequency <-  sort(target.by.frequency) 
+target.by.frequency.bottom.3 <- target.by.frequency[1:3] 
+target.by.frequency.bottom.3 
+```
+
+```{r}
+bottom_3_territories <- c("Lebanon", "Syria", "Canada")
+d.bottom.3.from.2010.to.2014 <- d[d$target %in% bottom_3_territories & d$year >= 2010 & d$year <= 2014, ]
+```
+
+How many observations do you have in `d.bottom.3.from.2010.to.2014`? Use `nrow()` on your data object to answer this question.
+
+# Print the resulting subset
+print(d.bottom.3.from.2010.to.2014)
+```{r}
+print(d.bottom.3.from.2010.to.2014)
+```
+
+# 4 Explore sources and targets with Sankey Diagrams *(1 point)*
+
+Tables are great. But it is usually hard to infer systematic patterns in your data while looking at them. For example, do the territories usually mirror each other attacks? A simple way to check it is to produce a Sankey Diagram.
+
+To plot our Sankey Diagrams we will use function `alluvial()` from `alluvial` package (yes, the names are confusing, but it is what it is). Inside `alluvial()` we need to specify to options. For `data` we need to specify which columns represent targets and sources. We can reference them by their names in the dataset `data = d[,c("source","target")]`. Alternatively, we can reference them by their position `data = d[,1:2]`.
+
+We also need to specify frequency with `freq = d$num`. This option is useful when each row represents not a single attack, but for example all the attacks from `source == "Country A"` to `target == "Country B"`. It is not our case, yet we are required to specify this option.
+
+# Load the alluvial package
+
+```{r}
+library(alluvial)
+```
+# Create a data frame with the relevant columns
+```{r}
+data <- d[, c("source", "target")]
+data = d[,1:2]
+```
+
+```{r}
+freq = d$num
+```
+
+```{r}
+alluvial(data = d[,1:2], freq=d$num)
+```
+
+Well, this looks awful and messy. This is because we have a lot territores that appear in `d` only a couple of times. Instead, let's subset data and keep only territories appeared either in `target.by.frequency.top.5`, or in `source.by.frequency.top.5`. Store this subset of data in in `d.for.alluvial`.
+# Specify the top 5 target territories and top 5 source territories
+top_5_target_territories <- c("Russia", "US", "Iran", "China", "N Korea")
+top_5_source_territories <- c("Vietnam", "US", "Ukraine", "UK", "Turkey")
+
+# Create a subset of data including only the top territories
+d.for.alluvial <- d[d$target %in% top_5_target_territories | d$source %in% top_5_source_territories, ]
+
+# Print the resulting subset
+print(d.for.alluvial)
+```{r}
+top_5_target_territories <- c("Russia", "US", "Iran", "China", "N Korea")
+top_5_source_territories <- c("Vietnam", "US", "Ukraine", "UK", "Turkey")
+d.for.alluvial <- d[d$target %in% top_5_target_territories | d$source %in% top_5_source_territories, ]
+print(d.for.alluvial)
+```
+
+Now, make your Sankey Diagram with `alluvial()` using `d.for.alluvial` as your input dataset.
+
+```{r}
+data <- d.for.alluvial[, c("source", "target")]
+data = d.for.alluvial[,1:2]
+
+freq = d.for.alluvial$num
+
+alluvial(data = d.for.alluvial[,1:2], freq=d.for.alluvial$num)
+```
+
+**Question.** Describe interesting patterns you see in this diagram. And what about attacks? Do we see the symmetry?
+
+**Your Answer:**
+
+# 5 Explore trends in cyberattacks with `ggplot` *(1 point)*
+
+Finally, we can use visual tools to explore trends in attacks with `ggplot` function. For example, we can look how the number of attack changes from year to year. We will use `d.attacks.by.year`. This dataset has only two columns `year` and `attacks`:
+
+```{r}
+head(d.attacks.by.year)
+```
+
+`ggplot` works like Lego. You add up different elements to build your final figure. First you need to specify your baseplate. Your baseplate is `ggplot()`. It has two major options: `data` (works like in `alluvial()`, `names()` and other functions) and `aes()` -- stands for aesthetics. Within `aes()` we specify the parameters of the plot we need, like x-axis or y-axis:
+
+```{r}
+ggplot(data = d.attacks.by.year,
+       aes(x = year, y = attacks)
+       )
+```
+
+We specified the baseplate but it is blank. This is because we can use a different layers to visualize our data-points. For example, we can add `geom_point()` layer to produce points:
+
+```{r}
+ggplot(data = d.attacks.by.year,
+       aes(x = year, y = attacks)
+       ) + 
+  geom_point()
+```
+
+Use `geom_line()` instead of `geom_point()` and reproduce our plot from the previous chunk:
+
+```{r}
+# put your answer here
+```
+
+We can also specify that our observations are organized as groups. We use `color = group_variable` to produce separate trends for each of the group. Let's take `d.attacks.by.year.and.method` and make trends separately for each method used for cyberattacks:
+
+```{r}
+ggplot(data = d.attacks.by.year.and.method,
+       aes(x = year, y = attacks, color = method) # We explicitly require ggplot to treat observations as groups
+       ) + # Use the plus to add layers and other elements to the baseplate. This plus should always appear at the end of the previous line of code, not at the beginning of the new line.
+  geom_line()
+```
+
+**Question.** Describe what you see here
+
+**Your Answer:**
+
+For the final task we will use data from `d.attacks.by.attack_on`. This dataset summarizes cyberattacks according to the type of their target. As in our main dataset `attack_on` in `d.attacks.by.attack_on` has three values: "Government", "Military", and "Private". In the chunk below, use `ggplot` to plot the year-trends in the number of attacks by each type of their target. Your plot should only show the attacks on private firms and government agencies (you will need to exclude military). Also, plot the results only for years from 2009 to 2014. Your plot should include both `geom_line` and `geom_point` layers.
+
+```{r}
+# put your answer here
+```
+
+# That's it!
+
+Now use triangle at the 'knit' button to compile html version of your report. Submit your html file to the class website under "Problem Set 1". If you cannot compile html that means you have some errors in your code. R console shows you the line with an error. Check it and try to compile your report again. If (after spending some time) you cannot compile your html, submit your Rmd file for partial credit.
+
+Good job!
